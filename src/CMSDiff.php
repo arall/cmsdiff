@@ -16,7 +16,7 @@ class CMSDiff
      *
      * @var array
      */
-    private $extensions = array('js', 'css');
+    private $extensions = array('js', 'css', 'xml', 'txt', 'ini', 'md', 'html', 'htm', 'jpeg', 'jpg', 'png', 'gif', 'svg', 'woff', 'eot', 'ttf', 'less');
 
     /**
      * Files map
