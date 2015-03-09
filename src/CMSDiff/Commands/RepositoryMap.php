@@ -52,6 +52,6 @@ class RepositoryMap extends Command
         file_put_contents($outputFile, json_encode($diff->map, JSON_PRETTY_PRINT));
 
         $output->writeln('<info>Files map saved to '.$outputFile.'</info>');
-        $output->writeln();
+        $output->writeln('');
     }
 }

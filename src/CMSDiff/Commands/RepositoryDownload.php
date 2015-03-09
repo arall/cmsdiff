@@ -77,6 +77,6 @@ class RepositoryDownload extends Command
         }
 
         $output->writeln('All releases have been downloaded');
-        $output->writeln();
+        $output->writeln('');
     }
 }
