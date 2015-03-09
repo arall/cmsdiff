@@ -49,15 +49,15 @@ class CMSDiff
 
         $this->scan();
 
-        if (!empty($this->map)) {
+        /*if (!empty($this->map)) {
             foreach ($this->map as $version => $files) {
                 $this->uniqueMap[$version] = $this->compare($version);
             }
-        }
+        }*/
     }
 
     /**
-     * Scan versions folder
+     * Scan versions folders
      *
      * @return bool
      */
@@ -65,7 +65,7 @@ class CMSDiff
     {
         $scan = scandir($this->folder);
         foreach ($scan as $key => $value) {
-            if (!in_array($value, array('.', '..'))) {
+            if (!in_array($value, array('.', '..', '.cache'))) {
                 if (is_dir($this->folder . DIRECTORY_SEPARATOR . $value)) {
                     $this->map[$value] = $this->map($value);
                 }
