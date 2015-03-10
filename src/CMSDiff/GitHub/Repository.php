@@ -120,8 +120,11 @@ class Repository
                 $zip->extractTo($path);
                 $zip->close();
 
+                // Get the (unknown) unziped folder name
+                $folder = $this->getLastFolder($path);
+
                 // Rename unziped folder
-                rename($path . DIRECTORY_SEPARATOR . $this->repo . '-' . $tagName, $folderPath);
+                rename($path . DIRECTORY_SEPARATOR . $folder, $folderPath);
 
                 return true;
 
@@ -157,6 +160,29 @@ class Repository
         $curl->close();
 
         return $response;
+    }
+
+    /**
+     * Get last created folder
+     *
+     * @param  string $path
+     * @return string
+     */
+    private function getLastFolder($path)
+    {
+        $latest_ctime = 0;
+        $latest_filename = '';
+
+        $d = dir($path);
+        while (false !== ($entry = $d->read())) {
+            $filepath = "{$path}/{$entry}";
+            if (is_dir($filepath) && !in_array($filepath, array('.', '..')) && filectime($filepath) > $latest_ctime) {
+                $latest_ctime = filectime($filepath);
+                $latest_filename = $entry;
+            }
+        }
+
+        return $latest_filename;
     }
 
 }
