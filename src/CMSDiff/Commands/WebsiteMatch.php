@@ -38,7 +38,14 @@ class WebsiteMatch extends Command
         if (!file_exists($jsonPath)) {
             return $output->writeln('<error>Data file not found: '.$jsonPath.'</error>');
         }
-        $json = file_get_contents($jsonPath);
+        $json = '';
+        $gzo = gzopen($jsonPath, "r");
+        while ($line = gzgets($gzo, 1024)) {
+            $json .= $line;
+        }
+        gzclose($gzo);
+
+        print_r($json);exit;
 
         try {
             $matcher = new Matcher($url, $json);

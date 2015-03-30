@@ -34,7 +34,7 @@ class RepositoryMap extends Command
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $target = $input->getArgument('target');
-        $outputFile = $input->getOption('output') ?: 'data/output.json';
+        $outputFile = $input->getOption('output') ?: 'data/output.json.gz';
         $outputPath = dirname($outputFile);
 
         // Check output path
@@ -49,7 +49,9 @@ class RepositoryMap extends Command
         }
 
         // Generate json
-        file_put_contents($outputFile, json_encode($diff->map, JSON_PRETTY_PRINT));
+        $gzo = gzopen($outputFile, 'w');
+        gzwrite($gzo, json_encode($diff->map));
+        gzclose($gzo);
 
         $output->writeln('<info>Files map saved to '.$outputFile.'</info>');
         $output->writeln('');
