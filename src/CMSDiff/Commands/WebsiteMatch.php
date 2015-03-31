@@ -45,8 +45,6 @@ class WebsiteMatch extends Command
         }
         gzclose($gzo);
 
-        print_r($json);exit;
-
         try {
             $matcher = new Matcher($url, $json);
             $versions = $matcher->match();
