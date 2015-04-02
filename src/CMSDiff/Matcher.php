@@ -1,7 +1,7 @@
 <?php
 namespace Arall\CMSDiff;
 
-use \Curl\Curl;
+use Curl\Curl;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Matcher
