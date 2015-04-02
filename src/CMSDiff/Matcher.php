@@ -2,9 +2,17 @@
 namespace Arall\CMSDiff;
 
 use \Curl\Curl;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class Matcher
 {
+    /**
+     * Output interface
+     *
+     * @var Symfony\Component\Console\Output\OutputInterface
+     */
+    private $output;
+
     /**
 	 * Website URL
 	 *
@@ -43,12 +51,14 @@ class Matcher
     /**
      * Construct
      *
+     * @param string $url  Target URL
      * @param string $json JSON Data
      */
-    public function __construct($url, $json)
+    public function __construct($url, $json, OutputInterface $output)
     {
         $this->url = $url;
         $this->data = json_decode($json, true);
+        $this->output = $output;
 
         // Load possible versions
         $this->candidates = array_keys($this->data);
@@ -65,7 +75,7 @@ class Matcher
             if ($file = $this->getNextFile()) {
                 // Delete versions in $candidates which don't match the hash
                 $hash = $this->getFileHash($file);
-                echo 'Matching '.$file.'...'.$hash.PHP_EOL;
+                $this->output->writeln('Matching ' . $file . '...' . $hash);
                 $this->discard($file, $hash);
             } else {
                 break;
@@ -88,14 +98,14 @@ class Matcher
         foreach ($this->candidates as $version) {
             if (isset($this->data[$version][$file])) {
                 if ($this->data[$version][$file] == $hash) {
-                    echo 'Match! '.$version.PHP_EOL;
+                    $this->output->writeln('<info>Match ' . $version . '</info>');
                     $matches[] = $version;
                     continue;
                 }
             }
         }
         if (empty($matches)) {
-            echo 'Ignoring file...'.PHP_EOL;
+            $this->output->writeln('Ignoring file...');
             $this->ignored[] = $file;
         } else {
             $this->candidates = $matches;
@@ -182,8 +192,6 @@ class Matcher
     private function getFileHash($path, $force = false)
     {
         $url = $this->url . $path;
-
-        echo '<curl>'.$url.PHP_EOL;
 
         // Non existing content?
         if ($force || !isset($this->content[$path])) {
