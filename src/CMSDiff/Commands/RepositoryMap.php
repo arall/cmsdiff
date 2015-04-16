@@ -7,7 +7,6 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-
 use Arall\CMSDiff;
 
 class RepositoryMap extends Command
@@ -22,6 +21,11 @@ class RepositoryMap extends Command
                 InputArgument::REQUIRED,
                 'Repository releases folder name (data/joomla-cms)'
             )
+            ->addArgument(
+                'product',
+                InputArgument::REQUIRED,
+                'Product name (Joomla)'
+            )
             ->addOption(
                'output',
                'o',
@@ -34,6 +38,7 @@ class RepositoryMap extends Command
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $target = $input->getArgument('target');
+        $product = $input->getArgument('product');
         $outputFile = $input->getOption('output') ?: 'data/output.json.gz';
         $outputPath = dirname($outputFile);
 
@@ -43,15 +48,13 @@ class RepositoryMap extends Command
         }
 
         try {
-            $diff = new CMSDiff($target);
+            $diff = new CMSDiff($target, $product);
         } catch (\Exception $e) {
             return $output->writeln('<error>'.$e->getMessage().'</error>');
         }
 
         // Generate json
-        $gzo = gzopen($outputFile, 'w');
-        gzwrite($gzo, json_encode($diff->map));
-        gzclose($gzo);
+        $diff->generateJson($outputFile);
 
         $output->writeln('<info>Files map saved to '.$outputFile.'</info>');
         $output->writeln('');

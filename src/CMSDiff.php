@@ -5,59 +5,56 @@ namespace Arall;
 class CMSDiff
 {
     /**
-     * Folder
+     * Folder.
      *
      * @var string
      */
     private $folder;
 
     /**
-     * Allowed file extensions
+     * Allowed file extensions.
      *
      * @var array
      */
     private $extensions = array('js', 'css', 'xml', 'txt', 'ini', 'md', 'html', 'htm', 'jpeg', 'jpg', 'png', 'gif', 'svg', 'woff', 'eot', 'ttf', 'less');
 
     /**
-     * Files map
+     * Product name.
+     *
+     * @var string
+     */
+    public $product;
+
+    /**
+     * Files map.
      *
      * @var array
      */
-    public $map = array();
+    private $map = array();
 
     /**
-     * Unique files map
+     * Construct.
      *
-     * @var array
-     */
-    public $uniqueMap = array();
-
-    /**
-	 * Construct
+     * @param string $folder
+     * @param string $product Product name
      *
-     * @param  string                   $folder
      * @throws InvalidArgumentException
-	 */
-    public function __construct($folder)
+     */
+    public function __construct($folder, $product)
     {
         // Folder exist?
         if (!is_dir($folder)) {
-            throw new \InvalidArgumentException('Folder ' . $folder . ' not found!');
+            throw new \InvalidArgumentException('Folder '.$folder.' not found!');
         }
 
         $this->folder = $folder;
+        $this->product = $product;
 
         $this->scan();
-
-        /*if (!empty($this->map)) {
-            foreach ($this->map as $version => $files) {
-                $this->uniqueMap[$version] = $this->compare($version);
-            }
-        }*/
     }
 
     /**
-     * Scan versions folders
+     * Scan versions folders.
      *
      * @return bool
      */
@@ -66,42 +63,43 @@ class CMSDiff
         $scan = scandir($this->folder);
         foreach ($scan as $key => $value) {
             if (!in_array($value, array('.', '..', '.cache'))) {
-                if (is_dir($this->folder . DIRECTORY_SEPARATOR . $value)) {
-                    $this->map[$value] = $this->map($value);
+                if (is_dir($this->folder.DIRECTORY_SEPARATOR.$value)) {
+                    $this->map[$this->product.' - '.$value] = $this->map($value);
                 }
             }
         }
     }
 
     /**
-     * Map files into map array
+     * Map files into map array.
      *
-     * @param  string $version
-     * @param  string $path
+     * @param string $version
+     * @param string $path
+     *
      * @return array
      */
     private function map($version, $path = '')
     {
-        $basePath = $this->folder . DIRECTORY_SEPARATOR . $version;
-        $fullPath = $basePath . $path;
+        $basePath = $this->folder.DIRECTORY_SEPARATOR.$version;
+        $fullPath = $basePath.$path;
 
         $files = array();
         $scan = scandir($fullPath);
         foreach ($scan as $key => $value) {
-            $valuePath = $path . DIRECTORY_SEPARATOR . $value;
+            $valuePath = $path.DIRECTORY_SEPARATOR.$value;
             if (!in_array($value, array('.', '..'))) {
 
                 // Is a directory?
-                if (is_dir($fullPath . DIRECTORY_SEPARATOR . $value)) {
+                if (is_dir($fullPath.DIRECTORY_SEPARATOR.$value)) {
                     $result = $this->map($version, $valuePath);
                     if (!empty($result)) {
                         $files = array_merge($files, $result);
                     }
 
                 // Is a file?
-                } elseif (in_array(pathinfo($value, PATHINFO_EXTENSION), $this->extensions) ) {
+                } elseif (in_array(pathinfo($value, PATHINFO_EXTENSION), $this->extensions)) {
                     $file = $valuePath;
-                    $files[$file] = md5(file_get_contents($basePath . $file));
+                    $files[$file] = md5(file_get_contents($basePath.$file));
                 }
             }
         }
@@ -110,37 +108,17 @@ class CMSDiff
     }
 
     /**
-     * Compare version files and get unique files
+     * Generate JSON file.
+     *
+     * @param string $output
      *
      * @return bool
      */
-    private function compare($version)
+    public function generateJson($output)
     {
-        if (isset($this->map[$version]) && !empty($this->map[$version])) {
+        $gzo = gzopen($output, 'w');
+        gzwrite($gzo, json_encode($this->map));
 
-            // All files are unique
-            $uniques = $this->map[$version];
-
-            // Loop files
-            foreach ($this->map[$version] as $file => $hash) {
-
-                // Compare hash to other versions files
-                foreach ($this->map as $compareVersion => $files) {
-
-                    // Ignore same version
-                    if ($compareVersion != $version) {
-                        foreach ($files as $compareHash) {
-
-                            // File is no more unique
-                            if ($hash == $compareHash) {
-                                unset($uniques[$file]);
-                            }
-                        }
-                    }
-                }
-            }
-
-            return $uniques;
-        }
+        return gzclose($gzo);
     }
 }

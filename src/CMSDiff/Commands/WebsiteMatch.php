@@ -6,7 +6,6 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-
 use Arall\CMSDiff\Matcher;
 
 class WebsiteMatch extends Command
@@ -24,7 +23,7 @@ class WebsiteMatch extends Command
             ->addArgument(
                 'json',
                 InputArgument::REQUIRED,
-                'Path to JSON map file (generated with repository:map)'
+                'Path to JSON map file / dir (generated with repository:map)'
             )
         ;
     }
@@ -36,19 +35,12 @@ class WebsiteMatch extends Command
 
         // Load Json file
         if (!file_exists($jsonPath)) {
-            return $output->writeln('<error>Data file not found: '.$jsonPath.'</error>');
+            return $output->writeln('<error>Data file / path not found: '.$jsonPath.'</error>');
         }
-        $json = '';
-        $gzo = gzopen($jsonPath, "r");
-        while ($line = gzgets($gzo, 1024)) {
-            $json .= $line;
-        }
-        gzclose($gzo);
 
         try {
-            $matcher = new Matcher($url, $json, $output);
+            $matcher = new Matcher($url, $jsonPath, $output);
             $versions = $matcher->match();
-
         } catch (\Exception $e) {
             return $output->writeln('<error>'.$e->getMessage().'</error>');
         }
