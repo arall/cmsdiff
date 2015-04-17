@@ -12,7 +12,7 @@
     "minimum-stability": "dev",
     "require": {
         "php": ">=5.3.0",
-        "php-curl-class/php-curl-class": "dev-master",
+        "php-curl-class/php-curl-class": "3.4.4",
         "symfony/console": "~2.0"
     },
     "require-dev": {
