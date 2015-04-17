@@ -55,7 +55,7 @@ class Matcher
      * @param string $url      Target URL
      * @param string $jsonPath JSON Data path (file or dir)
      */
-    public function __construct($url, $jsonPath, OutputInterface $output)
+    public function __construct($url, $jsonPath, $output = null)
     {
         $this->url = $url;
 
@@ -108,7 +108,7 @@ class Matcher
             if ($file = $this->getNextFile()) {
                 // Delete versions in $candidates which don't match the hash
                 $hash = $this->getFileHash($file);
-                $this->output->writeln('Matching '.$file.'...'.$hash);
+                $this->writeln('Matching '.$file.'...'.$hash);
                 $this->discard($file, $hash);
             } else {
                 break;
@@ -132,14 +132,14 @@ class Matcher
         foreach ($this->candidates as $version) {
             if (isset($this->data[$version][$file])) {
                 if ($this->data[$version][$file] == $hash) {
-                    $this->output->writeln('<info>Match '.$version.'</info>');
+                    $this->writeln('<info>Match '.$version.'</info>');
                     $matches[] = $version;
                     continue;
                 }
             }
         }
         if (empty($matches)) {
-            $this->output->writeln('Ignoring file...');
+            $this->writeln('Ignoring file...');
             $this->ignored[] = $file;
         } else {
             $this->candidates = $matches;
@@ -244,5 +244,19 @@ class Matcher
         }
 
         return $this->content[$path];
+    }
+
+    /**
+     * Output a line.
+     *
+     * @param string $string
+     *
+     * @return bool
+     */
+    private function writeln($string)
+    {
+        if ($this->output) {
+            return $this->output->writeln($string);
+        }
     }
 }
