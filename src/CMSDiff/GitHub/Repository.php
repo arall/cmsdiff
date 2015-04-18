@@ -6,34 +6,34 @@ use Curl\Curl;
 
 class Repository
 {
-
     /**
-     * GitHub API URL
+     * GitHub API URL.
      *
      * @var string
      */
     private $apiUrl = 'https://api.github.com/';
 
     /**
-     * Owner
+     * Owner.
      *
      * @var string
      */
     public $owner;
 
     /**
-     * Repo
+     * Repo.
      *
      * @var string
      */
     public $repo;
 
     /**
-	 * Construct
+     * Construct.
      *
-     * @param  string    $name
+     * @param string $name
+     *
      * @throws Exception Invalid repository
-	 */
+     */
     public function __construct($name)
     {
         $tmp = explode('/', $name);
@@ -47,7 +47,7 @@ class Repository
     }
 
     /**
-     * Get tags
+     * Get tags.
      *
      * @return array
      */
@@ -57,7 +57,7 @@ class Repository
         $page = 1;
 
         do {
-            $result = $this->apiCall('repos/' . $this->owner . '/' . $this->repo . '/tags?page=' . $page);
+            $result = $this->apiCall('repos/'.$this->owner.'/'.$this->repo.'/tags?page='.$page);
             if (!empty($result)) {
                 $tags = array_merge($tags, $result);
                 $page++;
@@ -70,10 +70,11 @@ class Repository
     }
 
     /**
-     * Download a release
+     * Download a release.
      *
-     * @param  string $tagName
-     * @param  string $path
+     * @param string $tagName
+     * @param string $path
+     *
      * @return bool
      */
     public function downloadRelease($tagName, $path)
@@ -84,18 +85,18 @@ class Repository
         }
 
         // Cache path
-        $cachePath = $path . DIRECTORY_SEPARATOR . '.cache';
+        $cachePath = $path.DIRECTORY_SEPARATOR.'.cache';
         if (!is_dir($cachePath)) {
             mkdir($cachePath, 0700, true);
         }
 
         // Prepar download URL
         $fileName = $tagName.'.zip';
-        $url = 'https://github.com/' . $this->owner . '/' . $this->repo . '/archive/' . $fileName;
+        $url = 'https://github.com/'.$this->owner.'/'.$this->repo.'/archive/'.$fileName;
 
         // Destination file path
-        $filePath = $cachePath . DIRECTORY_SEPARATOR . $fileName;
-        $folderPath = $path . DIRECTORY_SEPARATOR . $tagName;
+        $filePath = $cachePath.DIRECTORY_SEPARATOR.$fileName;
+        $folderPath = $path.DIRECTORY_SEPARATOR.$tagName;
 
         // Check cache
         if (!file_exists($filePath)) {
@@ -124,7 +125,7 @@ class Repository
                 $folder = $this->getLastFolder($path);
 
                 // Rename unziped folder
-                rename($path . DIRECTORY_SEPARATOR . $folder, $folderPath);
+                rename($path.DIRECTORY_SEPARATOR.$folder, $folderPath);
 
                 return true;
 
@@ -140,21 +141,22 @@ class Repository
     }
 
     /**
-     * API Call
+     * API Call.
      *
-     * @param  string    $path
+     * @param string $path
+     *
      * @throws Exception HTTP Error
+     *
      * @return
      */
     private function apiCall($path)
     {
         $curl = new Curl();
-        $curl->get($this->apiUrl . $path);
+        $curl->get($this->apiUrl.$path);
         if ($curl->error) {
             $curl->close();
 
-            throw new \Exception("HTTP Error: " . $curl->error_code . ': ' . $curl->error_message);
-
+            throw new \Exception('HTTP Error: '.$curl->error_code.': '.$curl->error_message);
         }
         $response = $curl->response;
         $curl->close();
@@ -163,9 +165,10 @@ class Repository
     }
 
     /**
-     * Get last created folder
+     * Get last created folder.
      *
-     * @param  string $path
+     * @param string $path
+     *
      * @return string
      */
     private function getLastFolder($path)
@@ -176,7 +179,7 @@ class Repository
         $d = dir($path);
         while (false !== ($entry = $d->read())) {
             $filepath = "{$path}/{$entry}";
-            if (is_dir($filepath) && !in_array($filepath, array('.', '..')) && filectime($filepath) > $latest_ctime) {
+            if (is_dir($filepath) && !in_array($entry, array('.', '..')) && filectime($filepath) > $latest_ctime) {
                 $latest_ctime = filectime($filepath);
                 $latest_filename = $entry;
             }
@@ -184,5 +187,4 @@ class Repository
 
         return $latest_filename;
     }
-
 }
