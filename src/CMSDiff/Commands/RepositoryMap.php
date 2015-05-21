@@ -50,6 +50,7 @@ class RepositoryMap extends Command
 
         try {
             $mapper = new Mapper($target, $product);
+            $mapper->scan();
         } catch (Exception $e) {
             return $output->writeln('<error>'.$e->getMessage().'</error>');
         }

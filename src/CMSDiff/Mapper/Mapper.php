@@ -25,7 +25,7 @@ class Mapper
      *
      * @var string
      */
-    public $product;
+    private $product;
 
     /**
      * Files.
@@ -51,8 +51,6 @@ class Mapper
 
         $this->path = $path;
         $this->product = $product;
-
-        $this->scan();
     }
 
     /**
@@ -60,7 +58,7 @@ class Mapper
      *
      * @return bool
      */
-    private function scan()
+    public function scan()
     {
         $scan = scandir($this->path);
         foreach ($scan as $key => $value) {
@@ -70,6 +68,8 @@ class Mapper
                 }
             }
         }
+
+        return !empty($this->files);
     }
 
     /**

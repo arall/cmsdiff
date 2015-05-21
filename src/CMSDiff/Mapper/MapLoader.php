@@ -2,6 +2,8 @@
 
 namespace Arall\CMSDiff\Mapper;
 
+use InvalidArgumentException;
+
 class MapLoader
 {
     /**
