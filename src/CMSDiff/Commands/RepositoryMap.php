@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Arall\CMSDiff;
+use Exception;
 
 class RepositoryMap extends Command
 {
@@ -49,7 +50,7 @@ class RepositoryMap extends Command
 
         try {
             $diff = new CMSDiff($target, $product);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $output->writeln('<error>'.$e->getMessage().'</error>');
         }
 

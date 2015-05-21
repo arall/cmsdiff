@@ -7,8 +7,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-
 use Arall\CMSDiff\GitHub\Repository;
+use Arall\CMSDiff\GitHub\Downloader;
+use Exception;
 
 class RepositoryDownload extends Command
 {
@@ -38,7 +39,7 @@ class RepositoryDownload extends Command
 
         try {
             $repository = new Repository($repo);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $output->writeln('<error>'.$e->getMessage().'</error>');
         }
 
@@ -50,7 +51,7 @@ class RepositoryDownload extends Command
         if (!is_array($tags) || empty($tags)) {
             return $output->writeln('<error>No tags found</error>');
         }
-        $output->writeln(count($tags). ' tags found (from <comment>'.current($tags)->name.'</comment> to <comment>'.end($tags)->name.'</comment>)');
+        $output->writeln(count($tags).' tags found (from <comment>'.current($tags)->name.'</comment> to <comment>'.end($tags)->name.'</comment>)');
         $output->writeln('');
 
         // Check download path
@@ -59,13 +60,17 @@ class RepositoryDownload extends Command
         }
 
         // Product folder
-        $productPath = $path . DIRECTORY_SEPARATOR . $repository->repo;
+        $productPath = $path.DIRECTORY_SEPARATOR.$repository->repo;
+
+        // Downloader
+        $downloader = new Downloader($repository, $productPath);
 
         // Download all relases
         foreach ($tags as $tag) {
             $output->writeln('  - Downloading release <info>'.$repo.'</info> (<comment>'.$tag->name.'</comment>)');
 
-            if ($repository->downloadRelease($tag->name, $productPath)) {
+            // Download release
+            if ($downloader->download($tag->name)) {
                 $output->writeln('  - Downloaded!');
                 $output->writeln('');
                 continue;

@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Arall\CMSDiff\Matcher;
+use Exception;
 
 class WebsiteMatch extends Command
 {
@@ -41,7 +42,7 @@ class WebsiteMatch extends Command
         try {
             $matcher = new Matcher($url, $jsonPath, $output);
             $versions = $matcher->match();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $output->writeln('<error>'.$e->getMessage().'</error>');
         }
 
