@@ -7,7 +7,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Arall\CMSDiff;
+use Arall\CMSDiff\Mapper\Mapper;
 use Exception;
 
 class RepositoryMap extends Command
@@ -49,13 +49,13 @@ class RepositoryMap extends Command
         }
 
         try {
-            $diff = new CMSDiff($target, $product);
+            $mapper = new Mapper($target, $product);
         } catch (Exception $e) {
             return $output->writeln('<error>'.$e->getMessage().'</error>');
         }
 
         // Generate json
-        $diff->generateJson($outputFile);
+        $mapper->save($outputFile);
 
         $output->writeln('<info>Files map saved to '.$outputFile.'</info>');
         $output->writeln('');

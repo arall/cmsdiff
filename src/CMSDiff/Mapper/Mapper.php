@@ -1,15 +1,17 @@
 <?php
 
-namespace Arall;
+namespace Arall\CMSDiff\Mapper;
 
-class CMSDiff
+use InvalidArgumentException;
+
+class Mapper
 {
     /**
-     * Folder.
+     * Path.
      *
      * @var string
      */
-    private $folder;
+    private $path;
 
     /**
      * Allowed file extensions.
@@ -26,52 +28,52 @@ class CMSDiff
     public $product;
 
     /**
-     * Files map.
+     * Files.
      *
      * @var array
      */
-    private $map = array();
+    private $files;
 
     /**
      * Construct.
      *
-     * @param string $folder
+     * @param string $path
      * @param string $product Product name
      *
      * @throws InvalidArgumentException
      */
-    public function __construct($folder, $product)
+    public function __construct($path, $product)
     {
         // Folder exist?
-        if (!is_dir($folder)) {
-            throw new \InvalidArgumentException('Folder '.$folder.' not found!');
+        if (!is_dir($path)) {
+            throw new InvalidArgumentException('Path '.$path.' not found!');
         }
 
-        $this->folder = $folder;
+        $this->path = $path;
         $this->product = $product;
 
         $this->scan();
     }
 
     /**
-     * Scan versions folders.
+     * Scan versions folders in path.
      *
      * @return bool
      */
     private function scan()
     {
-        $scan = scandir($this->folder);
+        $scan = scandir($this->path);
         foreach ($scan as $key => $value) {
             if (!in_array($value, array('.', '..', '.cache'))) {
-                if (is_dir($this->folder.DIRECTORY_SEPARATOR.$value)) {
-                    $this->map[$this->product.' - '.$value] = $this->map($value);
+                if (is_dir($this->path.DIRECTORY_SEPARATOR.$value)) {
+                    $this->files[$this->product.' - '.$value] = $this->map($value);
                 }
             }
         }
     }
 
     /**
-     * Map files into map array.
+     * Map files into files array.
      *
      * @param string $version
      * @param string $path
@@ -80,7 +82,7 @@ class CMSDiff
      */
     private function map($version, $path = '')
     {
-        $basePath = $this->folder.DIRECTORY_SEPARATOR.$version;
+        $basePath = $this->path.DIRECTORY_SEPARATOR.$version;
         $fullPath = $basePath.$path;
 
         $files = array();
@@ -108,17 +110,14 @@ class CMSDiff
     }
 
     /**
-     * Generate JSON file.
+     * Generate a Map file.
      *
      * @param string $output
      *
      * @return bool
      */
-    public function generateJson($output)
+    public function save($output)
     {
-        $gzo = gzopen($output, 'w');
-        gzwrite($gzo, json_encode($this->map));
-
-        return gzclose($gzo);
+        return MapLoader::save($this->files, $output);
     }
 }

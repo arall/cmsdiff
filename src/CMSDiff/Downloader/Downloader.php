@@ -1,6 +1,6 @@
 <?php
 
-namespace Arall\CMSDiff\GitHub;
+namespace Arall\CMSDiff\Downloader;
 
 use ZipArchive;
 use Exception;
@@ -8,16 +8,25 @@ use Exception;
 class Downloader
 {
     /**
-     * GitHub URL.
+     * Source provider.
+     *
+     * @var Arall\CMSDiff\Downloader\Provider
      */
-    const URL = 'https://github.com/';
+    private $provider;
 
     /**
-     * Repository dependency.
+     * Owner.
      *
-     * @var Arall\CMSDiff\GitHub\Repository
+     * @var string
      */
-    private $repository;
+    public $owner;
+
+    /**
+     * Repo.
+     *
+     * @var string
+     */
+    public $repo;
 
     /**
      * Destination path.
@@ -27,12 +36,22 @@ class Downloader
     private $path;
 
     /**
-     * @param Arall\CMSDiff\GitHub\Repository $repository
-     * @param string                          $path
+     * Cache path.
+     *
+     * @var string
      */
-    public function __construct(Repository $repository, $path)
+    private $cachePath;
+
+    /**
+     * @param Arall\CMSDiff\Downloader\Provider $provider
+     * @param string                            $path
+     */
+    public function __construct(Provider $provider, $path)
     {
-        $this->repository = $repository;
+        // Provider
+        $this->provider = $provider;
+
+        // Paths
         $this->path = $path;
         $this->cachePath = $this->path.'/.cache/';
 
@@ -43,38 +62,17 @@ class Downloader
     /**
      * Download a release.
      *
-     * @param string $tag
+     * @param string $releaseName
      *
      * @return bool
      */
-    public function download($tag)
+    public function download($releaseName)
     {
-        // Prepare the download URL
-        $fileName = $tag.'.zip';
-        $url = self::URL.$this->repository->owner.'/'.$this->repository->repo.'/archive/'.$fileName;
+        // Download
+        $file = $this->provider->downloadRelease($releaseName, $this->cachePath);
 
-        // Destination file path
-        $filePath = $this->cachePath.$fileName;
-        $folderPath = $this->path.'/'.$tag;
-
-        // Check cache
-        if (!file_exists($filePath)) {
-            // Download
-            if (!file_put_contents($filePath, file_get_contents($url))) {
-                // Download error
-                throw new Exception('Download error');
-
-                return false;
-            }
-        }
-
-        // Check if folder already exist
-        if (!is_dir($folderPath)) {
-            // Unzip
-            return $this->unzip($filePath, $folderPath);
-        }
-
-        return true;
+        // Unzip
+        return $this->unzip($file, $this->path.'/'.$releaseName);
     }
 
     /**

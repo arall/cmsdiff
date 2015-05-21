@@ -7,9 +7,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Arall\CMSDiff\GitHub\Repository;
-use Arall\CMSDiff\GitHub\Downloader;
-use Exception;
+use Arall\CMSDiff\Downloader\Providers\GitHub;
+use Arall\CMSDiff\Downloader\Downloader;
+use InvalidArgumentException;
 
 class RepositoryDownload extends Command
 {
@@ -37,21 +37,30 @@ class RepositoryDownload extends Command
         $repo = $input->getArgument('repo');
         $path = $input->getOption('path') ?: 'data';
 
-        try {
-            $repository = new Repository($repo);
-        } catch (Exception $e) {
-            return $output->writeln('<error>'.$e->getMessage().'</error>');
+        // Repository
+        $tmp = explode('/', $repo);
+        if (count($tmp) != 2) {
+            throw new InvalidArgumentException('Invalid repository name: '.$repo);
         }
+        $owner = $tmp[0];
+        $repo = $tmp[1];
 
-        // Get tags
-        $output->writeln('<info>Loading repository tags</info>');
-        $tags = $repository->getTags();
+        // Product folder
+        $productPath = $path.DIRECTORY_SEPARATOR.$owner.DIRECTORY_SEPARATOR.$repo;
 
-        // Has tags?
-        if (!is_array($tags) || empty($tags)) {
-            return $output->writeln('<error>No tags found</error>');
+        // Classes
+        $provider = new GitHub($owner, $repo);
+        $downloader = new Downloader($provider, $productPath);
+
+        // Get releases
+        $output->writeln('<info>Loading repository releases</info>');
+        $releases = $provider->getReleases();
+
+        // Has releases?
+        if (!is_array($releases) || empty($releases)) {
+            return $output->writeln('<error>No releases found</error>');
         }
-        $output->writeln(count($tags).' tags found (from <comment>'.current($tags)->name.'</comment> to <comment>'.end($tags)->name.'</comment>)');
+        $output->writeln(count($releases).' releases found (from <comment>'.current($releases)->name.'</comment> to <comment>'.end($releases)->name.'</comment>)');
         $output->writeln('');
 
         // Check download path
@@ -59,18 +68,12 @@ class RepositoryDownload extends Command
             return $output->writeln('<error>Destination path '.$path.' is not writable</error>');
         }
 
-        // Product folder
-        $productPath = $path.DIRECTORY_SEPARATOR.$repository->repo;
-
-        // Downloader
-        $downloader = new Downloader($repository, $productPath);
-
         // Download all relases
-        foreach ($tags as $tag) {
-            $output->writeln('  - Downloading release <info>'.$repo.'</info> (<comment>'.$tag->name.'</comment>)');
+        foreach ($releases as $release) {
+            $output->writeln('  - Downloading release <info>'.$repo.'</info> (<comment>'.$release->name.'</comment>)');
 
             // Download release
-            if ($downloader->download($tag->name)) {
+            if ($downloader->download($release->name)) {
                 $output->writeln('  - Downloaded!');
                 $output->writeln('');
                 continue;
